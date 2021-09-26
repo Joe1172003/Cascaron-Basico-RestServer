@@ -67,6 +67,7 @@ const usuariosGet = async(req, res = response) => {
   const usuariosDelete = async(req, res = response) => {
     
     const { id }  = req.params;
+    
     //Notes: no es aconsejable borrar el usuario debido a que puedo perder la integridad referencial del usuario
     //const usuario = await Usuario.findByIdAndDelete( id );
     const usuario = await Usuario.findByIdAndUpdate( id, { estado: false });

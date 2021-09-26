@@ -1,7 +1,14 @@
+//Exportaciones de Node
 const { Router } = require('express');
 const { check } = require('express-validator');
+
+//Mis Exportaciones :: Middleware Personalizados
 const { esRoleValido, emailExiste, usuarioExiste } = require('../helpers/db-validators');
-const { validarCampos } = require('../middleware/validator');
+const {
+    validarCampos,
+    validarJWT,
+    adminRole,
+    tieneRole} = require('../middleware')
 
 const { usuariosGet,
         usuariosPost, 
@@ -9,7 +16,7 @@ const { usuariosGet,
         usuariosPatch, 
         usuariosDelete } = require('../controllers/user.controller');
 
-
+//Rutas
 const router = Router();
 
 router.get('/', usuariosGet)
@@ -24,6 +31,9 @@ router.post('/',[
 ], usuariosPost);
 
 router.delete('/:id',[
+    validarJWT,
+    //adminRole,
+    tieneRole('ADMIN_ROLE','VENTAS_ROLE'),
     check('id','No es un id valido..!!').isMongoId(),
     check('id').custom( usuarioExiste ),
     validarCampos
