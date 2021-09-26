@@ -1,7 +1,8 @@
-const { response } = require("express");
+const { response, json } = require("express");
 const Usuario = require('../models/usuario');
 const bcryptjs = require('bcryptjs');
 const { generarJWT } = require("../helpers/generar-jwt");
+const { googleVerify } = require("../helpers/google-verify");
 
 
 
@@ -30,7 +31,7 @@ const login =  async (req,res= response) =>{
             usuario,
             token
         })
-        
+
     } catch (error) {
         console.log(err);
         return res.status(500).send({message: 'Ups! Algo salio mal. Hable con el Administrador'})    
@@ -38,6 +39,49 @@ const login =  async (req,res= response) =>{
 
 }
 
+const googleSigIn = async(req, res=response) => {
+    const {id_token} = req.body;
+
+    try {
+        const { nombre, img, correo } = await googleVerify( id_token );
+
+        let usuario = await Usuario.findOne({ correo });
+
+        if( !usuario ){
+            // Tengo que crearlo
+            const data = {
+                nombre,
+                correo,
+                password: '',
+                img,
+                google: true
+            };
+
+            usuario = new Usuario( data );
+            await usuario.save();
+        }
+
+        //Si el usuario en DB => estado: false
+
+        if(usuario.estado == false){
+            return res.status(400).json({ message: 'Ups! Usuario de baja' })
+        }
+        
+        // Generar Token
+        const token = await generarJWT( usuario.id);
+        res.json({
+            usuario,
+            token
+        })
+        console.log(usuario);
+            
+    } catch (error) {
+        ok: false
+        res.status(500).send({message: 'Ups! Token no se pudo verificar'});
+    }
+}
+
 module.exports = {
-    login
+    login,
+    googleSigIn
 }
